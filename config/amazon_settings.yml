@@ -1,0 +1,35 @@
+uk:
+  is_logged_in:
+    text: 'Hello, Sign in'
+    checkout:
+      xpath: '//*[@id="sc-buy-box-ptc-button"]/span/input'
+com:
+  is_logged_in:
+    text: 'Hello, Sign in'
+    checkout:
+      xpath: '//*[@id="sc-buy-box-ptc-button"]/span/input'
+ca:
+  is_logged_in:
+    text: 'Hello, Sign in'
+    checkout:
+      xpath: '//*[@id="sc-buy-box-ptc-button"]/span/input'
+de:
+  is_logged_in:
+    text: 'Hello, Sign in'
+    checkout:
+      xpath: '//*[@id="sc-buy-box-ptc-button"]/span/input'
+es:
+  is_logged_in:
+    text: 'Hello, Sign in'
+    checkout:
+      xpath: '//*[@id="sc-buy-box-ptc-button"]/span/input'
+fr:
+  is_logged_in:
+    text: 'Hello, Sign in'
+    checkout:
+      xpath: '//*[@id="sc-buy-box-ptc-button"]/span/input'
+it:
+  is_logged_in:
+    text: 'Ciao, Accedi'
+  checkout:
+    xpath: '//*span[@class="ewc-button ewc-button-primary ewc-button-span12"]/span/input'
