@@ -1,6 +1,7 @@
 import json
 import secrets
 import time
+import yaml
 from os import path
 from price_parser import parse_price
 
@@ -14,6 +15,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 
 from utils import selenium_utils
 from utils.json_utils import InvalidAutoBuyConfigException
+from utils.json_utils import InvalidLabelConfigException
 from utils.logger import log
 from utils.selenium_utils import options, enable_headless, wait_for_element
 from price_parser import parse_price
@@ -25,6 +27,7 @@ AMAZON_URLS = {
 CHECKOUT_URL = "https://{domain}/gp/cart/desktop/go-to-checkout.html/ref=ox_sc_proceed?partialCheckoutCart=1&isToBeGiftWrappedBefore=0&proceedToRetailCheckout=Proceed+to+checkout&proceedToCheckout=1&cartInitiateId={cart_id}"
 
 AUTOBUY_CONFIG_PATH = "amazon_config.json"
+AMAZON_SETTINGS_PATH = "config/amazon_settings.yml"
 
 SIGN_IN_TITLES = [
     "Amazon Sign In",
@@ -45,9 +48,9 @@ HOME_PAGE_TITLES = [
     "Amazon.es: compra online de electrónica, libros, deporte, hogar, moda y mucho más.",
     "Amazon.de: Günstige Preise für Elektronik & Foto, Filme, Musik, Bücher, Games, Spielzeug & mehr",
     "Amazon.fr : livres, DVD, jeux vidéo, musique, high-tech, informatique, jouets, vêtements, chaussures, sport, bricolage, maison, beauté, puériculture, épicerie et plus encore !",
-    "Amazon.it: elettronica, libri, musica, fashion, videogiochi, DVD e tanto altro",
+    "Amazon.it: elettronica, libri, musica, fashion, videogiochi, DVD e tanto altro"
 ]
-SHOPING_CART_TITLES = [
+SHOPPING_CART_TITLES = [
     "Amazon.com Shopping Cart",
     "Amazon.ca Shopping Cart",
     "Amazon.co.uk Shopping Basket",
@@ -55,7 +58,7 @@ SHOPING_CART_TITLES = [
     "Amazon.de Einkaufswagen",
     "Cesta de compra Amazon.es",
     "Amazon.fr Panier",
-    "Carrello Amazon.it",
+    "Carrello Amazon.it"
     "AmazonSmile Shopping Cart",
 ]
 CHECKOUT_TITLES = [
@@ -74,6 +77,7 @@ CHECKOUT_TITLES = [
     "Passez votre commande - Processus de paiement Amazon.fr",
     "Ordina - Cassa Amazon.it",
     "AmazonSmile Checkout",
+    "Pagamento Amazon.it"
 ]
 ORDER_COMPLETE_TITLES = [
     "Amazon.com Thanks You",
@@ -92,7 +96,7 @@ ADD_TO_CART_TITLES = [
     "Amazon.de: Please Confirm Your Action",
     "Amazon.es: confirma tu acción",
     "Amazon.com : Veuillez confirmer votre action",  # Careful, required non-breaking space after .com (&nbsp)
-    "Amazon.it: confermare l'operazione",
+    "Amazon.it: confermare l'operazione"
     "AmazonSmile: Please Confirm Your Action",
 ]
 DOGGO_TITLES = [
@@ -134,6 +138,21 @@ class Amazon:
             )
             exit(0)
 
+        with open(AMAZON_SETTINGS_PATH) as file:
+            try:
+                full_config = yaml.load(file, Loader=yaml.FullLoader)
+                log.info(f"label config file is: {full_config}")
+                url_split = self.amazon_website.split(".")
+                tld = "".join(url_split[1:])
+                log.info(f"TLD from config file is: {tld}")
+                label_config = full_config[tld]
+                log.info(f"language_config is: {label_config}")
+                self.label_config = label_config
+            except Exception:
+                raise InvalidLabelConfigException(
+                    "error while loading amazon_settings.yml"
+                )
+
         for key in AMAZON_URLS.keys():
             AMAZON_URLS[key] = AMAZON_URLS[key].format(domain=self.amazon_website)
         self.driver.get(AMAZON_URLS["BASE_URL"])
@@ -162,7 +181,7 @@ class Amazon:
     def is_logged_in(self):
         try:
             text = wait_for_element(self.driver, "nav-link-accountList").text
-            return "Hello, Sign in" not in text
+            return self.label_config['is_logged_in']['text'] not in text
         except Exception:
             return False
 
@@ -255,7 +274,7 @@ class Amazon:
             return False
         else:
             return False
-        
+
     def get_captcha_help(self):
         if not self.on_captcha_page():
             log.info("Not on captcha page.")
@@ -390,7 +409,7 @@ class Amazon:
         self.driver.find_element_by_xpath('//input[@value="add"]').click()
 
         log.info("Waiting for Cart Page")
-        self.check_if_captcha(self.wait_for_pages, SHOPING_CART_TITLES)
+        self.check_if_captcha(self.wait_for_pages, SHOPPING_CART_TITLES)
         self.driver.save_screenshot("screenshot.png")
         self.notification_handler.send_notification("Cart Page", True)
 
@@ -407,7 +426,7 @@ class Amazon:
             log.info("clicking checkout.")
             try:
                 self.driver.find_element_by_xpath(
-                    '//*[@id="sc-buy-box-ptc-button"]/span/input'
+                    self.label_config['checkout']['xpath']
                 ).click()
             finally:
                 self.driver.save_screenshot("screenshot.png")

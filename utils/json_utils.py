@@ -18,3 +18,7 @@ def find_values(json_repr, id):
 class InvalidAutoBuyConfigException(Exception):
     def __init__(self, message):
         super().__init__(message)
+
+class InvalidLabelConfigException(Exception):
+    def __init__(self, message):
+        super().__init__(message)
